@@ -12,16 +12,16 @@
     // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
     // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
     
-    UIWindowScene* wScene = [[UIWindowScene alloc] initWithSession:session connectionOptions:connectionOptions];
-
-    UIViewController* mView = [[TableViewController alloc] initWithFolderPath:@"/Volumes/osx/Users/kluv/Documents/temp/"];
-    
-    UINavigationController* navControlller = [[UINavigationController alloc] initWithRootViewController:mView];
-    
-    self.window = [[UIWindow alloc] initWithWindowScene:wScene];
-    self.window.rootViewController = navControlller;
-    self.window.backgroundColor = [UIColor systemPinkColor];
-    [self.window makeKeyAndVisible];
+//    UIWindowScene* wScene = [[UIWindowScene alloc] initWithSession:session connectionOptions:connectionOptions];
+//
+//    UIViewController* mView = [[TableViewController alloc] initWithFolderPath:@"/Volumes/osx/Users/kluv/Documents/temp/"];
+//
+//    UINavigationController* navControlller = [[UINavigationController alloc] initWithRootViewController:mView];
+//
+//    self.window = [[UIWindow alloc] initWithWindowScene:wScene];
+//    self.window.rootViewController = navControlller;
+//    self.window.backgroundColor = [UIColor systemPinkColor];
+//    [self.window makeKeyAndVisible];
     
 }
 

@@ -10,8 +10,9 @@
 
 @interface TableViewController ()
 
-@property (strong, nonatomic) NSString* path;
 @property (strong, nonatomic) NSArray* contents;
+
+@property (strong, nonatomic) NSString* selectedPath;
 
 @end
 
@@ -22,16 +23,26 @@
     self = [super initWithStyle:UITableViewStyleGrouped];
     if (self) {
         self.path = path;
-        
-        NSError* error = nil;
-        
-        self.contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.path error:&error];
-        
-        if (error) {
-            NSLog(@"%@", [error localizedDescription]);
-        }
     }
     return self;
+    
+}
+
+- (void)setPath:(NSString *)path {
+ 
+    _path = path;
+    
+    NSError* error = nil;
+    
+    self.contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.path error:&error];
+    
+    if (error) {
+        NSLog(@"%@", [error localizedDescription]);
+    }
+    
+    [self.tableView reloadData];
+    
+    self.navigationItem.title = [self.path lastPathComponent];
     
 }
 
@@ -39,8 +50,16 @@
     [super viewDidLoad];
     
     [self setupView];
+        
+    if (!self.path) {
+        self.path = @"/Volumes/osx/Users/kluv/Documents/temp/";
+    }
     
-    self.navigationItem.title = [self.path lastPathComponent];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+ 
+    [super viewWillAppear:animated];
     
     if ([self.navigationController.viewControllers count] > 1) {
      
@@ -79,6 +98,26 @@
     NSString* filePath = [self.path stringByAppendingPathComponent:fileName];
     
     return filePath;
+    
+}
+
+- (NSString*) fileSizeFromValue:(unsigned long long) size {
+ 
+    static NSString* units[] = {@"B", @"KB", @"MB", @"GB", @"TB"};
+    static int unitsCount = 5;
+    
+    int index = 0;
+    
+    double fileSize = (double)size;
+    
+    while (fileSize > 1024 && index < unitsCount) {
+     
+        fileSize /= 1024;
+        index++;
+        
+    }
+    
+    return [NSString stringWithFormat:@"%.2f %@", fileSize, units[index]];
     
 }
 
@@ -136,12 +175,6 @@
     
 }
 
-- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
- 
-    [self setupView];
-    
-}
-
 #pragma mark - Table view data source
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -152,24 +185,56 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     
-    NSString* indetifier = @"Cell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:indetifier];
-    
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:indetifier];
-    }
+    NSString* indetifier = nil;
     
     NSString* fileName = [self.contents objectAtIndex:indexPath.row];
-    
+
     if ([self isFolderAtIndexPath:indexPath]) {
-        cell.imageView.image = [UIImage imageNamed:@"folder"];
+        
+        indetifier = @"FolderCell";
+
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:indetifier];
+        
+        if (!cell) {
+            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:indetifier];
+        }
+        
+        cell.textLabel.text = fileName;
+        
+        return cell;
+        
     } else {
-        cell.imageView.image = [UIImage imageNamed:@"file"];
+        
+        indetifier = @"FileCell";
+        
+        NSString* filePath = [self fullPathAtIndexPath:indexPath];
+        
+        NSDictionary* fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil];
+        
+        FileCell *cell = [tableView dequeueReusableCellWithIdentifier:indetifier];
+        
+        if (!cell) {
+            cell = [[FileCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:indetifier];
+        }
+        
+        static NSDateFormatter* dateFormatter = nil;
+        
+        if (!dateFormatter) {
+         
+            dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"dd/MM/YY"];
+            
+        }
+        
+        cell.nameLabel.text = fileName;
+        cell.infoLabel.text = [NSString stringWithFormat:@"size: %@; date mod.: %@", [self fileSizeFromValue:[fileAttributes fileSize]], [dateFormatter stringFromDate:[fileAttributes fileModificationDate]]];
+        
+        //[NSString stringWithFormat:@"size: %lld; modified: %@", [fileAttributes fileSize], [fileAttributes fileModificationDate]];
+        
+        return cell;
+        
     }
     
-    cell.textLabel.text = fileName;
-    
-    return cell;
 }
 
 
@@ -183,11 +248,42 @@
      
         NSString* filePath = [self fullPathAtIndexPath:indexPath];
         
-        TableViewController* folderView = [[TableViewController alloc] initWithFolderPath:filePath];
+        //option 1
         
-        [self.navigationController pushViewController:folderView animated:YES];
+//        TableViewController* folderView = [[TableViewController alloc] initWithFolderPath:filePath];
+//
+//        [self.navigationController pushViewController:folderView animated:YES];
+  
+        //option 2 (best practice)
+        
+//        UIStoryboard* storyBoard = self.storyboard;
+//
+//        TableViewController* vc = [storyBoard instantiateViewControllerWithIdentifier:@"TableViewController1"];
+//        vc.path = filePath;
+//
+//        [self.navigationController pushViewController:vc animated:YES];
+        
+        //option 3 with segue (not recomended)
+        
+        self.selectedPath = filePath;
+        [self performSegueWithIdentifier:@"navigateDeep" sender:nil];
         
     }
+    
+}
+
+#pragma mark - Seque
+
+- (BOOL)shouldPerformSegueWithIdentifier:(NSString *)identifier sender:(id)sender {
+    
+    return YES;
+    
+}
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+ 
+    TableViewController* vc = segue.destinationViewController;
+    vc.path = self.selectedPath;
     
 }
 

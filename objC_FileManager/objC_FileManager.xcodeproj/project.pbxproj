@@ -15,6 +15,8 @@
 		B1575C5F241E13AF00A1F047 /* objC_FileManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B1575C5E241E13AF00A1F047 /* objC_FileManagerTests.m */; };
 		B1575C6A241E13AF00A1F047 /* objC_FileManagerUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = B1575C69241E13AF00A1F047 /* objC_FileManagerUITests.m */; };
 		B1575C79241E148500A1F047 /* TableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B1575C78241E148500A1F047 /* TableViewController.m */; };
+		B1575CBC241E8D4F00A1F047 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B1575CBB241E8D4F00A1F047 /* Main.storyboard */; };
+		B19B6D30241FE72F0087E362 /* FileCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B19B6D2F241FE72F0087E362 /* FileCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +54,9 @@
 		B1575C6B241E13AF00A1F047 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B1575C77241E148500A1F047 /* TableViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TableViewController.h; sourceTree = "<group>"; };
 		B1575C78241E148500A1F047 /* TableViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TableViewController.m; sourceTree = "<group>"; };
+		B1575CBB241E8D4F00A1F047 /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		B19B6D2E241FE72F0087E362 /* FileCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileCell.h; sourceTree = "<group>"; };
+		B19B6D2F241FE72F0087E362 /* FileCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FileCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +107,7 @@
 		B1575C41241E13AD00A1F047 /* objC_FileManager */ = {
 			isa = PBXGroup;
 			children = (
+				B19B6D31241FE7460087E362 /* Cells */,
 				B1575C42241E13AD00A1F047 /* AppDelegate.h */,
 				B1575C43241E13AD00A1F047 /* AppDelegate.m */,
 				B1575C45241E13AD00A1F047 /* SceneDelegate.h */,
@@ -112,6 +118,7 @@
 				B1575C54241E13AF00A1F047 /* main.m */,
 				B1575C77241E148500A1F047 /* TableViewController.h */,
 				B1575C78241E148500A1F047 /* TableViewController.m */,
+				B1575CBB241E8D4F00A1F047 /* Main.storyboard */,
 			);
 			path = objC_FileManager;
 			sourceTree = "<group>";
@@ -132,6 +139,15 @@
 				B1575C6B241E13AF00A1F047 /* Info.plist */,
 			);
 			path = objC_FileManagerUITests;
+			sourceTree = "<group>";
+		};
+		B19B6D31241FE7460087E362 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				B19B6D2E241FE72F0087E362 /* FileCell.h */,
+				B19B6D2F241FE72F0087E362 /* FileCell.m */,
+			);
+			path = Cells;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -237,6 +253,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1575CBC241E8D4F00A1F047 /* Main.storyboard in Resources */,
 				B1575C52241E13AF00A1F047 /* LaunchScreen.storyboard in Resources */,
 				B1575C4F241E13AF00A1F047 /* Assets.xcassets in Resources */,
 			);
@@ -263,6 +280,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B19B6D30241FE72F0087E362 /* FileCell.m in Sources */,
 				B1575C44241E13AD00A1F047 /* AppDelegate.m in Sources */,
 				B1575C55241E13AF00A1F047 /* main.m in Sources */,
 				B1575C47241E13AD00A1F047 /* SceneDelegate.m in Sources */,
@@ -436,7 +454,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "itotdel.kluv.objC-FileManager";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -453,7 +471,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "itotdel.kluv.objC-FileManager";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

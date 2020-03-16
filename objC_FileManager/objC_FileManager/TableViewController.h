@@ -7,12 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "FileCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TableViewController : UITableViewController
 
 - (id) initWithFolderPath: (NSString*) path;
+
+@property (strong, nonatomic) NSString* path;
 
 @end
 

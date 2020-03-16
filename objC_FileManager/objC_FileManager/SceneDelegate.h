@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "TableViewController.h"
 
 @interface SceneDelegate : UIResponder <UIWindowSceneDelegate>
 
