@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "FileCell.h"
+#import "FolderCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -16,6 +17,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (id) initWithFolderPath: (NSString*) path;
 
 @property (strong, nonatomic) NSString* path;
+
+@property (weak, nonatomic) IBOutlet UIButton *testButton;
+
+
 
 @end
 

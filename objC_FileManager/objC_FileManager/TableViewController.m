@@ -12,7 +12,12 @@
 
 @property (strong, nonatomic) NSArray* contents;
 
+@property (strong, nonatomic) NSMutableArray* contentsFolders;
+@property (strong, nonatomic) NSMutableArray* contentsFiles;
+
 @property (strong, nonatomic) NSString* selectedPath;
+
+@property (strong, nonatomic) UIView* previousViewController;
 
 @end
 
@@ -28,18 +33,35 @@
     
 }
 
-- (void)setPath:(NSString *)path {
- 
-    _path = path;
+- (void) reloadFileData {
     
-    NSError* error = nil;
+    self.contentsFolders = [[NSMutableArray alloc] init];
+    self.contentsFiles = [[NSMutableArray alloc] init];
     
-    self.contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.path error:&error];
+    self.contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.path error:nil];
     
-    if (error) {
-        NSLog(@"%@", [error localizedDescription]);
+    for (NSString* stringPath in self.contents) {
+        
+        BOOL isDirectory = NO;
+                
+        [[NSFileManager defaultManager] fileExistsAtPath:[self.path stringByAppendingPathComponent:stringPath] isDirectory:&isDirectory];
+        
+        if (isDirectory) {
+            [self.contentsFolders addObject:stringPath];
+        } else {
+            [self.contentsFiles addObject:stringPath];
+        }
+        
     }
     
+}
+
+- (void) setPath:(NSString *)path {
+ 
+    _path = path;
+            
+    [self reloadFileData];
+        
     [self.tableView reloadData];
     
     self.navigationItem.title = [self.path lastPathComponent];
@@ -55,20 +77,61 @@
         self.path = @"/Volumes/osx/Users/kluv/Documents/temp/";
     }
     
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated {
  
     [super viewWillAppear:animated];
     
-    if ([self.navigationController.viewControllers count] > 1) {
-     
-        UIBarButtonItem* item = [[UIBarButtonItem alloc] initWithTitle:@"ROOT" style:UIBarButtonItemStylePlain target:self action:@selector(actionBackToRoot:)];
+    [self setupBarButtonsItem];
+    
+    if (self.previousViewController == self.view) {
         
-        self.navigationItem.rightBarButtonItem = item;
+        [self setPath:self.path];
         
     }
+        
+}
+
+- (void) setupBarButtonsItem {
+     
+
+    //folder btn
+    UIButton* folderBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 24, 22)];
+    [folderBtn addTarget:self action:@selector(actionCreateFolder:) forControlEvents:UIControlEventTouchUpInside];
+    [folderBtn setImage:[UIImage systemImageNamed:@"folder.fill"] forState:UIControlStateNormal];
     
+    //home btn
+    UIButton* homeBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 23, 22)];
+    [homeBtn addTarget:self action:@selector(actionBackToRoot:) forControlEvents:UIControlEventTouchUpInside];
+    [homeBtn setImage:[UIImage systemImageNamed:@"house"] forState:UIControlStateNormal];
+    
+    UIBarButtonItem* item1 = [[UIBarButtonItem alloc] initWithCustomView:folderBtn];
+    UIBarButtonItem* item2 = [[UIBarButtonItem alloc] initWithCustomView:homeBtn];
+    
+    UIBarButtonItem* spaceItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];;
+    spaceItem.width = 11.0f;
+    
+    NSArray* buttons = [NSArray arrayWithObjects:item1, nil];
+    
+    if ([self.navigationController.viewControllers count] > 1) {
+        buttons = [NSArray arrayWithObjects:item1, spaceItem, item2, nil];
+    }
+    
+    self.navigationItem.rightBarButtonItems = buttons;
+    
+    if ([self.navigationController.viewControllers count] > 1) {
+    
+        //back button
+        UIButton* folderBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 20, 22)];
+        [folderBtn addTarget:self action:@selector(actionCreateFolder:) forControlEvents:UIControlEventTouchUpInside];
+        [folderBtn setImage:[UIImage systemImageNamed:@"arrow.uturn.left"] forState:UIControlStateNormal];
+        
+    }
+        
+    //arrow.uturn.left
+        
 }
 
 #pragma mark - Actions
@@ -79,25 +142,128 @@
     
 }
 
+- (void) actionCreateFolder:(UIBarButtonItem*) sender {
+ 
+    UIAlertController* alertCtrl = [UIAlertController alertControllerWithTitle:@"Enter folder name" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+    
+    [alertCtrl addTextFieldWithConfigurationHandler:^(UITextField* textField) {
+        textField.placeholder = @"Folder name";
+    }];
+    
+    UIAlertAction *actionCancel = [UIAlertAction
+                                   actionWithTitle:@"Cancel"
+                                   style:UIAlertActionStyleCancel
+                                   handler:nil];
+    
+    UIAlertAction *actionOK = [UIAlertAction
+                               actionWithTitle:@"OK"
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+        UITextField *folderNameTextField = alertCtrl.textFields.firstObject;
+        NSString* folderName = folderNameTextField.text;
+        
+        [self createFolder:folderName];
+    }];
+    
+    [alertCtrl addAction:actionCancel];
+    [alertCtrl addAction:actionOK];
+    
+    [self presentViewController:alertCtrl animated:YES completion:nil];
+    
+}
+
 #pragma mark - Methods
     
+- (NSString*) getFileNameAtIndexPath:(NSIndexPath*) indexPath {
+    
+    NSString* fileName = @"";
+    
+    if ([self isFolderAtIndexPath:indexPath]) {
+        fileName = [self.contentsFolders objectAtIndex:indexPath.row];
+    } else {
+        fileName = [self.contentsFiles objectAtIndex:indexPath.row - [self.contentsFolders count]];
+    }
+    
+    return fileName;
+    
+}
+
+- (void) createFolder:(NSString*) folderName {
+ 
+    NSString* filePath = [self.path stringByAppendingPathComponent:folderName];
+    [[NSFileManager defaultManager] createDirectoryAtPath:filePath withIntermediateDirectories:NO attributes:nil error:nil];
+    
+    [self setPath:self.path];
+    
+}
+
+- (void) deleteFileAtIndexPath:(NSIndexPath*) indexPath {
+    
+    NSString* fullPath = [self.path stringByAppendingPathComponent:[self getFileNameAtIndexPath:indexPath]];
+    [[NSFileManager defaultManager] removeItemAtPath:fullPath error:nil];
+    
+    [self reloadFileData];
+    
+}
+
+- (void) printConstraintConstants:(UIView*) view {
+    
+    for (NSLayoutConstraint* constraint in view.constraints) {
+        NSLog(@"%f",constraint.constant);
+    }
+
+    for (UIView* subview in view.subviews) {
+        [self printConstraintConstants:subview];
+    }
+    
+}
+
 - (BOOL) isFolderAtIndexPath:(NSIndexPath*) indexPath {
 
-    NSString* filePath = [self fullPathAtIndexPath:indexPath];
+    if (indexPath.row > (int)[self.contentsFolders count] - 1) {
+        return NO;
+    }
     
-    BOOL isFolder = NO;
-    [[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:&isFolder];
-    
-    return isFolder;
-    
+    return YES;
+        
 }
 
 - (NSString*) fullPathAtIndexPath:(NSIndexPath*) indexPath {
     
-    NSString* fileName = [self.contents objectAtIndex:indexPath.row];
+    NSString* fileName = [self getFileNameAtIndexPath:indexPath];
     NSString* filePath = [self.path stringByAppendingPathComponent:fileName];
     
     return filePath;
+    
+}
+
+- (unsigned long long) folderSizeAtPath:(NSString*) path {
+    
+    NSArray* folderContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:nil];
+    
+    unsigned long long folderSize = 0;
+    
+    for (NSString* fileName in folderContents) {
+        
+        NSString* fullPath = [path stringByAppendingPathComponent:fileName];
+        
+        BOOL isFolder = NO;
+        [[NSFileManager defaultManager] fileExistsAtPath:fullPath isDirectory:&isFolder];
+        
+        if (isFolder) {
+        
+            folderSize += [self folderSizeAtPath:fullPath];
+            
+        } else {
+            
+            NSDictionary* fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:fullPath error:nil];
+            folderSize += [fileAttributes fileSize];
+        }
+        
+    }
+    
+    return folderSize;
     
 }
 
@@ -178,7 +344,7 @@
 #pragma mark - Table view data source
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-
+    
     return [self.contents count];
     
 }
@@ -187,19 +353,23 @@
     
     NSString* indetifier = nil;
     
-    NSString* fileName = [self.contents objectAtIndex:indexPath.row];
+    NSString* fileName = [self getFileNameAtIndexPath:indexPath];
 
     if ([self isFolderAtIndexPath:indexPath]) {
         
         indetifier = @"FolderCell";
 
-        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:indetifier];
+        FolderCell *cell = [tableView dequeueReusableCellWithIdentifier:indetifier];
         
         if (!cell) {
-            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:indetifier];
+            cell = [[FolderCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:indetifier];
         }
         
-        cell.textLabel.text = fileName;
+        cell.folderName.text = fileName;
+        
+        unsigned long long folderSize = [self folderSizeAtPath:[self.path stringByAppendingPathComponent:fileName]];
+        
+        cell.folderInfo.text = [NSString stringWithFormat:@"folder size: %@;", [self fileSizeFromValue:folderSize]];
         
         return cell;
         
@@ -239,6 +409,34 @@
 
 
 #pragma mark - UITableViewDelegate
+
+- (UISwipeActionsConfiguration *)tableView:(UITableView *)tableView trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    UIContextualAction *delete = [UIContextualAction contextualActionWithStyle:UIContextualActionStyleDestructive
+                                                                         title:@"DELETE"
+                                                                       handler:^(UIContextualAction * _Nonnull action, __kindof UIView * _Nonnull sourceView, void (^ _Nonnull completionHandler)(BOOL)) {
+        
+        [self deleteFileAtIndexPath:indexPath];
+                            
+        [self.tableView beginUpdates];
+        [self.tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationRight];
+        [self.tableView endUpdates];
+                
+        completionHandler(YES);
+        
+    }];
+    
+    delete.backgroundColor = [UIColor  purpleColor]; //arbitrary color
+    
+    UISwipeActionsConfiguration *swipeActionConfig = nil;
+    
+    swipeActionConfig = [UISwipeActionsConfiguration configurationWithActions:@[delete]];
+
+    swipeActionConfig.performsFirstActionWithFullSwipe = NO;
+    
+    return swipeActionConfig;
+    
+}
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
  
@@ -284,51 +482,8 @@
  
     TableViewController* vc = segue.destinationViewController;
     vc.path = self.selectedPath;
+    self.previousViewController = self.view;
     
 }
-
-/*
-// Override to support conditional editing of the table view.
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
-}
-*/
-
-/*
-// Override to support editing the table view.
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        // Delete the row from the data source
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
-        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-    }   
-}
-*/
-
-/*
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
-}
-*/
-
-/*
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Return NO if you do not want the item to be re-orderable.
-    return YES;
-}
-*/
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 @end
