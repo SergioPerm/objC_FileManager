@@ -190,7 +190,7 @@
     if ([self isFolderAtIndexPath:indexPath]) {
         fileName = [self.contentsFolders objectAtIndex:indexPath.row];
     } else {
-        fileName = [self.contentsFiles objectAtIndex:indexPath.row - [self.contentsFolders count]];
+        fileName = [self.contentsFiles objectAtIndex:indexPath.row - (int)[self.contentsFolders count]];
     }
     
     return fileName;
@@ -353,7 +353,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     
-    return [self.contents count];
+    return (int)[self.contentsFiles count] + (int)[self.contentsFolders count];
     
 }
 
