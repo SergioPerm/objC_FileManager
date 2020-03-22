@@ -49,11 +49,19 @@
         if (isDirectory) {
             [self.contentsFolders addObject:stringPath];
         } else {
+            
+            NSString *firstLetter = [stringPath substringToIndex:1];
+            if ([firstLetter isEqualToString:@"."]) {
+                continue;
+            }
+            
             [self.contentsFiles addObject:stringPath];
         }
         
     }
     
+    [self.contentsFolders sortUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+    [self.contentsFiles sortUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
 }
 
 - (void) setPath:(NSString *)path {
